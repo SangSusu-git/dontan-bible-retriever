@@ -1,5 +1,7 @@
 # dontan-bible-retriever
 
+성경 본문을 읽고, 북마크하고, 검색할 수 있는 Next.js(App Router, TypeScript) 기반 웹 성경 앱입니다.
+
 ## 브랜치 구조
 
 `app` 브랜치는 성경 앱(웹) 작업을 모으는 통합 브랜치이며, 기능별 하위 브랜치(`app-*`)를
@@ -13,3 +15,13 @@ PR로 받아 병합한다. `main`으로의 병합은 별도 승인 후 진행한
 | `app-search-adapter` | 검색 인터페이스(`SearchAdapter`) 및 mock `search()` 구현 |
 
 이 표는 브랜치를 새로 푸시할 때마다 갱신한다.
+
+## Getting Started
+
+개발 서버 실행:
+
+\`\`\`bash
+npm run dev
+\`\`\`
+
+[http://localhost:3000](http://localhost:3000) 에서 결과를 확인할 수 있습니다.
