@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     chroma_path: str = "chroma"
     chroma_collection: str = "verses"
     embedding_model: str = "nlpai-lab/KURE-v1"
-    dense_threshold: float = 0.8
+    dense_threshold: float = 0.7
     rrf_k: int = 60
     max_results: int = 500
 

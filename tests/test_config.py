@@ -4,7 +4,7 @@ def test_settings_defaults(monkeypatch):
     monkeypatch.setenv("BIBLE_API_KEY", "secret123")
     s = Settings()
     assert s.api_key == "secret123"
-    assert s.dense_threshold == 0.8
+    assert s.dense_threshold == 0.7
     assert s.chroma_collection == "verses"
 
 def test_settings_env_override(monkeypatch):
