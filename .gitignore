@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+# 데이터/인덱스/모델 산출물 (Plan 2에서 생성)
+data/*.jsonl
+chroma/
+.chroma/
+models/
