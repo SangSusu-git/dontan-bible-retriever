@@ -2,14 +2,23 @@ from bible_search.models import Verse, SearchResult
 from bible_search.embedding import Embedder
 
 
-def add_verses_to_collection(collection, verses: list[Verse], embedder: Embedder) -> None:
+# Chroma는 단일 add 호출당 배치 크기 상한(버전에 따라 ~5461)이 있어, 그보다
+# 작은 값으로 나눠 적재한다. 전체 성경(약 3만 절)은 한 번에 넣을 수 없다.
+_ADD_BATCH_SIZE = 5000
+
+
+def add_verses_to_collection(collection, verses: list[Verse], embedder: Embedder,
+                             batch_size: int = _ADD_BATCH_SIZE) -> None:
     if not verses:
         return
     embeddings = embedder.encode([v.text for v in verses])
-    collection.add(
-        ids=[v.id for v in verses],
-        embeddings=[e.tolist() for e in embeddings],
-    )
+    ids = [v.id for v in verses]
+    for start in range(0, len(ids), batch_size):
+        end = start + batch_size
+        collection.add(
+            ids=ids[start:end],
+            embeddings=[e.tolist() for e in embeddings[start:end]],
+        )
 
 
 class DenseRetriever:
