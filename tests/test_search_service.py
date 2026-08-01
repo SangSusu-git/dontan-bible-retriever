@@ -1,0 +1,55 @@
+import itertools
+import chromadb
+from bible_search.tokenizer import KiwiTokenizer
+from bible_search.retrievers.exact import ExactMatcher
+from bible_search.retrievers.bm25 import BM25Retriever
+from bible_search.retrievers.dense import DenseRetriever, add_verses_to_collection
+from bible_search.search_service import SearchService, SearchResponse
+
+_counter = itertools.count()
+
+
+def _service(verses, embedder, threshold=0.5):
+    client = chromadb.EphemeralClient()
+    # chromadb.EphemeralClient() instances share in-process storage, so each
+    # call needs a distinct collection name to avoid "already exists" errors
+    # across the test functions in this module (same issue test_dense.py
+    # avoids by using "dense-test" / "dense-test-2").
+    col = client.create_collection(f"svc-test-{next(_counter)}", metadata={"hnsw:space": "cosine"})
+    add_verses_to_collection(col, verses, embedder)
+    return SearchService(
+        exact=ExactMatcher(verses),
+        bm25=BM25Retriever(verses, KiwiTokenizer()),
+        dense=DenseRetriever(col, verses, embedder, threshold=threshold),
+    )
+
+
+def test_search_returns_response_shape(verses, fake_embedder):
+    svc = _service(verses, fake_embedder)
+    resp = svc.search("여호와")
+    assert isinstance(resp, SearchResponse)
+    assert isinstance(resp.exact_matches, list)
+    assert isinstance(resp.related_matches, list)
+
+
+def test_exact_hit_appears_in_exact_section(verses, fake_embedder):
+    svc = _service(verses, fake_embedder)
+    resp = svc.search("천지를 창조")
+    exact_ids = [r.verse.id for r in resp.exact_matches]
+    assert "개역개정:창세기:1:1" in exact_ids
+
+
+def test_related_excludes_exact_ids(verses, fake_embedder):
+    svc = _service(verses, fake_embedder)
+    resp = svc.search("여호와는 나의 목자")
+    exact_ids = {r.verse.id for r in resp.exact_matches}
+    related_ids = {r.verse.id for r in resp.related_matches}
+    assert exact_ids
+    assert exact_ids.isdisjoint(related_ids)
+
+
+def test_max_results_caps_related(verses, fake_embedder):
+    svc = _service(verses, fake_embedder)
+    svc._max_results = 1
+    resp = svc.search("여호와")
+    assert len(resp.related_matches) <= 1
