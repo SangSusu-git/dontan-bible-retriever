@@ -163,6 +163,62 @@ def clean_text(text: str) -> str:
     return text
 
 
+# 크롤러가 뒤 구절을 앞 구절에 병합해 넣은 아티팩트 패턴. 예:
+#   "...본문 [ (Job 35:17) 다음 구절 본문 ] [ (Job 35:18) 그 다음 구절 본문 ]"
+# 괄호 안 영어 책 이름은 항상 부모 레코드와 같은 책이므로(확인됨) 별도의
+# 영→한 매핑 없이 부모의 한글 book 필드를 재사용한다. non-greedy + DOTALL로
+# 각 세그먼트를 개별적으로 잡아낸다.
+MERGED_SEGMENT_RE = re.compile(
+    r"\[\s*\(\s*[A-Za-z0-9 ]+?\s+(\d+):(\d+)\s*\)\s*(.*?)\]", re.DOTALL
+)
+
+
+def split_merged_segments(verses: list[dict]) -> list[dict]:
+    """앞 구절에 병합된 '[ (Book CH:VS) 본문 ]' 세그먼트를 별도 레코드로 분리한다.
+
+    분리 후에는 어떤 레코드의 text에도 '[ (' 가 남아있으면 안 된다.
+    """
+    result: list[dict] = []
+    seen_ids: set[str] = {v["id"] for v in verses}
+
+    for v in verses:
+        raw_text = v["text"]
+        first_bracket = raw_text.find("[ (")
+        if first_bracket == -1:
+            result.append(v)
+            continue
+
+        # 부모 구절의 실제 본문은 첫 '[ (' 이전 부분뿐이다.
+        parent_text = clean_text(raw_text[:first_bracket])
+        v = dict(v)
+        v["text"] = parent_text
+        result.append(v)
+
+        for m in MERGED_SEGMENT_RE.finditer(raw_text[first_bracket:]):
+            ch = int(m.group(1))
+            vs = int(m.group(2))
+            seg_text = clean_text(m.group(3))
+            vid = f"{v['translation']}:{v['book']}:{ch}:{vs}"
+            if vid in seen_ids:
+                raise ValueError(
+                    f"분리된 구절 id가 기존 레코드와 충돌함: {vid} "
+                    f"(부모: {v['id']})"
+                )
+            seen_ids.add(vid)
+            result.append(
+                {
+                    "id": vid,
+                    "book": v["book"],
+                    "chapter": ch,
+                    "verse": vs,
+                    "text": seg_text,
+                    "translation": v["translation"],
+                }
+            )
+
+    return result
+
+
 def build_verses(raw: list[dict]) -> list[dict]:
     by_abbrev = {b["abbrev"]: b["chapters"] for b in raw}
     missing = [ab for ab, _kr in BOOK_ORDER if ab not in by_abbrev]
@@ -192,7 +248,7 @@ def build_verses(raw: list[dict]) -> list[dict]:
                         "translation": TRANSLATION,
                     }
                 )
-    return verses
+    return split_merged_segments(verses)
 
 
 def write_jsonl(verses: list[dict], path: Path = OUTPUT_PATH) -> None:
