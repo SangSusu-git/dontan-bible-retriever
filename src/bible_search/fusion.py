@@ -1,10 +1,10 @@
-from bible_search.models import SearchResult
+from bible_search.models import Verse, SearchResult
 
 
 def reciprocal_rank_fusion(result_lists: list[list[SearchResult]],
                            k: int = 60) -> list[SearchResult]:
     scores: dict[str, float] = {}
-    verses: dict[str, object] = {}
+    verses: dict[str, Verse] = {}
     for results in result_lists:
         for rank, r in enumerate(results):
             vid = r.verse.id

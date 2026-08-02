@@ -10,7 +10,6 @@ def _normalize(s: str) -> str:
 
 class ExactMatcher:
     def __init__(self, verses: list[Verse]) -> None:
-        self._verses = verses
         self._norm = [(_normalize(v.text), v) for v in verses]
 
     def search(self, query: str) -> list[SearchResult]:

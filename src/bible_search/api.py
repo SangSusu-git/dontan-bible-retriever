@@ -1,3 +1,4 @@
+import hmac
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Header, HTTPException, Depends, Request
@@ -22,7 +23,8 @@ def _serialize(r: SearchResult) -> dict:
 
 
 def _require_api_key(x_api_key: str | None, settings: Settings) -> None:
-    if x_api_key != settings.api_key:
+    # 상수 시간 비교로 타이밍 사이드채널 방지
+    if x_api_key is None or not hmac.compare_digest(x_api_key, settings.api_key):
         raise HTTPException(status_code=401, detail="invalid api key")
 
 
