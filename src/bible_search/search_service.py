@@ -14,18 +14,19 @@ class SearchResponse:
 
 class SearchService:
     def __init__(self, exact: ExactMatcher, bm25: BM25Retriever, dense: DenseRetriever,
-                 rrf_k: int = 60, max_results: int = 500) -> None:
+                 rrf_k: int = 60, max_results: int = 50, bm25_top_k: int = 30) -> None:
         self._exact = exact
         self._bm25 = bm25
         self._dense = dense
         self._rrf_k = rrf_k
         self._max_results = max_results
+        self._bm25_top_k = bm25_top_k
 
     def search(self, query: str) -> SearchResponse:
         exact = self._exact.search(query)
         exact_ids = {r.verse.id for r in exact}
 
-        bm25 = self._bm25.search(query)
+        bm25 = self._bm25.search(query, limit=self._bm25_top_k)
         dense = self._dense.search(query)
         fused = reciprocal_rank_fusion([bm25, dense], k=self._rrf_k)
 

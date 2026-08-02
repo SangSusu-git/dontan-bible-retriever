@@ -53,3 +53,26 @@ def test_max_results_caps_related(verses, fake_embedder):
     svc._max_results = 1
     resp = svc.search("여호와")
     assert len(resp.related_matches) <= 1
+
+
+def test_search_applies_bm25_top_k(verses, fake_embedder):
+    client = chromadb.EphemeralClient()
+    col = client.create_collection(f"svc-test-{next(_counter)}", metadata={"hnsw:space": "cosine"})
+    add_verses_to_collection(col, verses, fake_embedder)
+
+    real_bm25 = BM25Retriever(verses, KiwiTokenizer())
+    seen = {}
+
+    class SpyBM25:
+        def search(self, query, limit=None):
+            seen["limit"] = limit
+            return real_bm25.search(query, limit=limit)
+
+    svc = SearchService(
+        exact=ExactMatcher(verses),
+        bm25=SpyBM25(),
+        dense=DenseRetriever(col, verses, fake_embedder, threshold=0.5),
+        bm25_top_k=1,
+    )
+    svc.search("여호와")
+    assert seen["limit"] == 1  # SearchService must forward bm25_top_k as the BM25 limit

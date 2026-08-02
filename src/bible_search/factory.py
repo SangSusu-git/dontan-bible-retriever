@@ -23,4 +23,5 @@ def build_search_service(settings: Settings,
     dense = DenseRetriever(collection, verses, embedder,
                            threshold=settings.dense_threshold)
     return SearchService(exact, bm25, dense,
-                         rrf_k=settings.rrf_k, max_results=settings.max_results)
+                         rrf_k=settings.rrf_k, max_results=settings.max_results,
+                         bm25_top_k=settings.bm25_top_k)

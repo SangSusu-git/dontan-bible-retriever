@@ -12,7 +12,8 @@ class Settings(BaseSettings):
     embedding_model: str = "nlpai-lab/KURE-v1"
     dense_threshold: float = 0.7
     rrf_k: int = 60
-    max_results: int = 500
+    max_results: int = 50
+    bm25_top_k: int = 30
 
 
 @lru_cache
