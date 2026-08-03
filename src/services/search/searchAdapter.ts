@@ -1,57 +1,23 @@
-import type {
-  SearchAdapter,
-  SearchRequest,
-  SearchResponse,
-  SearchResult,
-} from "@/types/search";
-import { bibleVerses } from "@/data";
-
-function findHighlightRanges(text: string, query: string): [number, number][] {
-  if (!query) return [];
-
-  const ranges: [number, number][] = [];
-  const lowerText = text.toLowerCase();
-  const lowerQuery = query.toLowerCase();
-
-  let fromIndex = 0;
-  while (fromIndex <= lowerText.length) {
-    const index = lowerText.indexOf(lowerQuery, fromIndex);
-    if (index === -1) break;
-    ranges.push([index, index + query.length]);
-    fromIndex = index + query.length;
-  }
-
-  return ranges;
-}
+import type { SearchAdapter, SearchRequest, SearchResponse } from "@/types/search";
 
 /**
- * Mock 검색 구현.
- * 실제 검색 엔진(형태소 분석/임베딩 등)이 준비되면 이 함수의 내부 구현만
- * 동일한 시그니처로 교체하면 된다. 호출부(검색 화면)는 이 함수의 존재만 알고 있다.
+ * 하이브리드 검색 API 연동 구현.
+ * 브라우저는 이 함수만 호출하고, 실제 검색 서버 호출과 API 키 처리는
+ * 서버 라우트(src/app/api/search/route.ts)에서 담당한다.
+ * 화면은 이 함수의 시그니처만 알고 있으므로, 내부 구현이 바뀌어도 호출부는 그대로 둔다.
  */
 export async function search(request: SearchRequest): Promise<SearchResponse> {
-  const query = request.query.trim();
+  const res = await fetch("/api/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
 
-  if (!query) {
-    return { results: [], totalCount: 0 };
+  if (!res.ok) {
+    throw new Error(`검색에 실패했습니다 (${res.status})`);
   }
 
-  const matched: SearchResult[] = bibleVerses
-    .filter((verse) => !request.translation || verse.translation === request.translation)
-    .filter((verse) => !request.bookFilter || request.bookFilter.includes(verse.book))
-    .filter((verse) => verse.text.includes(query))
-    .map((verse) => ({
-      book: verse.book,
-      chapter: verse.chapter,
-      verse: verse.verse,
-      text: verse.text,
-      highlight: findHighlightRanges(verse.text, query),
-    }));
-
-  const results =
-    typeof request.limit === "number" ? matched.slice(0, request.limit) : matched;
-
-  return { results, totalCount: matched.length };
+  return (await res.json()) as SearchResponse;
 }
 
-export const mockSearchAdapter: SearchAdapter = { search };
+export const searchAdapter: SearchAdapter = { search };
