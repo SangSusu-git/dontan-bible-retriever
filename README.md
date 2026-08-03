@@ -36,18 +36,25 @@ npm run dev
 
 검색 기능은 [`src/types/search.ts`](src/types/search.ts)에 정의된 `SearchRequest` /
 `SearchResponse` / `SearchAdapter` 인터페이스로 화면과 완전히 분리되어 있습니다.
-현재는 [`src/services/search/searchAdapter.ts`](src/services/search/searchAdapter.ts)에
-샘플 데이터를 문자열 포함 여부로 필터링하는 mock `search()` 함수만 들어있습니다.
+화면(`src/app/search/page.tsx`)은 [`src/services/search/searchAdapter.ts`](src/services/search/searchAdapter.ts)의
+`search()` 함수 시그니처만 알고 있으므로, 내부 구현이 바뀌어도 화면 코드는 그대로입니다.
 
-실제 검색 엔진을 연동하려면:
+현재는 별도 팀이 개발한 하이브리드 검색 API(BM25 + dense 검색 + RRF 결합)와 연동되어 있습니다.
 
-1. `searchAdapter.ts`의 `search(request: SearchRequest): Promise<SearchResponse>`
-   함수 **내부 구현만** 실제 검색 엔진 호출(API fetch 등)로 교체합니다. 함수 시그니처와
-   반환 타입(`SearchResponse`)은 그대로 유지해야 합니다.
-2. 화면(`src/app/search/page.tsx` 등)은 이 함수의 시그니처만 알고 있으므로, 위 교체만으로
-   별도 수정 없이 그대로 동작합니다.
-3. 필요하다면 `SearchRequest`/`SearchResult`에 optional 필드를 추가하는 것은 가능하지만,
-   기존 필드를 변경/삭제할 경우 화면 쪽 사용처도 함께 확인해야 합니다.
+```
+검색 화면 → searchAdapter.search() → /api/search (Next.js 서버 라우트) → 하이브리드 검색 API 서버
+```
+
+- `searchAdapter.ts`는 브라우저에서 안전하게 호출 가능한 `/api/search`만 호출합니다.
+- 실제 검색 API 키/주소는 [`src/app/api/search/route.ts`](src/app/api/search/route.ts)라는
+  서버 전용 라우트에서만 사용되며, 브라우저로는 절대 노출되지 않습니다.
+- 아래 두 환경변수를 `.env.local`에 설정해야 실제 검색이 동작합니다 (`.env.example` 참고).
+  - `BIBLE_SEARCH_API_URL`: 검색 API 서버 주소 (예: `http://localhost:8000`)
+  - `BIBLE_SEARCH_API_KEY`: 검색 API 인증 키
+
+검색 엔진을 교체하거나 API 스펙이 바뀌면, `route.ts`에서 업스트림 응답을 우리
+`SearchResponse` 형태로 매핑하는 부분만 수정하면 되고, `searchAdapter.ts`와 화면 코드는
+그대로 둡니다.
 
 ## 성경 데이터 출처
 
