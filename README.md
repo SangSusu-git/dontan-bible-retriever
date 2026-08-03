@@ -17,6 +17,7 @@ PR로 받아 병합한다. `main`으로의 병합은 별도 승인 후 진행한
 | `app-read` | 읽기 화면(책/장 선택 UI, 절 단위 본문 표시) |
 | `app-search-screen` | 검색 화면(SearchBar, 결과 목록) — searchAdapter의 mock `search()`에 연동 |
 | `app-bookmarks` | 북마크 화면 — `useBookmarks` 훅으로 localStorage에 저장/조회/삭제 |
+| `app-readme` | README에 검색 엔진 연동 방법 / 성경 데이터 출처 문서화 |
 
 이 표는 브랜치를 새로 푸시할 때마다 갱신한다.
 
