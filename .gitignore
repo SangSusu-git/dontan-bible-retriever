@@ -12,4 +12,5 @@ venv/
 data/*.jsonl
 chroma/
 .chroma/
+numpy_index/
 models/
