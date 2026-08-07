@@ -1,3 +1,4 @@
+import pytest
 from bible_search.tokenizer import KiwiTokenizer
 from bible_search.retrievers.bm25 import BM25Retriever
 
@@ -26,3 +27,20 @@ def test_bm25_limit_caps_results(verses):
     r = BM25Retriever(verses, KiwiTokenizer())
     results = r.search("여호와", limit=1)
     assert len(results) <= 1
+
+def test_bm25_with_pretokenized_corpus_matches_default(verses):
+    tokenizer = KiwiTokenizer()
+    corpus = [tokenizer.tokenize(v.text) for v in verses]
+    cached = BM25Retriever(verses, tokenizer, corpus=corpus)
+    default = BM25Retriever(verses, tokenizer)
+
+    for query in ("태초 창조", "여호와"):
+        cached_ids = [x.verse.id for x in cached.search(query)]
+        default_ids = [x.verse.id for x in default.search(query)]
+        assert cached_ids == default_ids
+
+def test_bm25_mismatched_corpus_length_raises(verses):
+    tokenizer = KiwiTokenizer()
+    short_corpus = [["a"]]
+    with pytest.raises(ValueError):
+        BM25Retriever(verses, tokenizer, corpus=short_corpus)

@@ -11,6 +11,8 @@ def test_settings_defaults(monkeypatch):
     assert s.hf_token is None
     assert s.vector_store == "chroma"
     assert s.numpy_index_path == "numpy_index"
+    assert s.use_token_cache is False
+    assert s.token_cache_path == "token_cache.json"
 
 def test_settings_env_override(monkeypatch):
     monkeypatch.setenv("BIBLE_API_KEY", "k")

@@ -87,3 +87,46 @@ def test_make_dense_retriever_invalid_value_raises(verses, fake_embedder):
     s = _settings(vector_store="bogus")
     with pytest.raises(ValueError, match="bogus"):
         factory._make_dense_retriever(s, verses, fake_embedder)
+
+
+def test_make_bm25_retriever_without_cache_tokenizes_directly(verses):
+    from bible_search.tokenizer import KiwiTokenizer
+    from bible_search.retrievers.bm25 import BM25Retriever
+
+    s = _settings(use_token_cache=False)
+    retriever = factory._make_bm25_retriever(s, verses, KiwiTokenizer())
+
+    assert isinstance(retriever, BM25Retriever)
+
+
+def test_make_bm25_retriever_with_missing_cache_raises(tmp_path, verses):
+    from bible_search.tokenizer import KiwiTokenizer
+
+    missing_path = tmp_path / "does_not_exist.json"
+    s = _settings(use_token_cache=True, token_cache_path=str(missing_path))
+
+    with pytest.raises(FileNotFoundError, match="build_token_cache"):
+        factory._make_bm25_retriever(s, verses, KiwiTokenizer())
+
+
+def test_make_bm25_retriever_with_cache_uses_pretokenized_corpus(tmp_path, verses, monkeypatch):
+    from bible_search.tokenizer import KiwiTokenizer
+
+    cache_path = tmp_path / "token_cache.json"
+    cache_path.write_text("{}")  # 존재하기만 하면 됨; load_token_cache는 monkeypatch로 대체
+    s = _settings(use_token_cache=True, token_cache_path=str(cache_path))
+
+    fake_corpus = [["dummy"] for _ in verses]
+    captured = {}
+
+    def fake_load_token_cache(path, vs):
+        captured["path"] = path
+        captured["verses"] = vs
+        return fake_corpus
+
+    monkeypatch.setattr(factory, "load_token_cache", fake_load_token_cache)
+
+    retriever = factory._make_bm25_retriever(s, verses, KiwiTokenizer())
+
+    assert captured["verses"] == verses
+    assert retriever._bm25 is not None

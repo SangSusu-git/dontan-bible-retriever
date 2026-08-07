@@ -1,7 +1,10 @@
+from pathlib import Path
+
 import chromadb
 from bible_search.config import Settings
 from bible_search.data.loader import load_verses
 from bible_search.tokenizer import KiwiTokenizer
+from bible_search.token_cache import load_token_cache
 from bible_search.embedding import Embedder, HfApiEmbedder, KureEmbedder
 from bible_search.models import Verse
 from bible_search.retrievers.exact import ExactMatcher
@@ -39,6 +42,21 @@ def _make_dense_retriever(settings: Settings, verses: list[Verse],
     )
 
 
+def _make_bm25_retriever(settings: Settings, verses: list[Verse],
+                         tokenizer: KiwiTokenizer) -> BM25Retriever:
+    if not settings.use_token_cache:
+        return BM25Retriever(verses, tokenizer)
+
+    cache_path = Path(settings.token_cache_path)
+    if not cache_path.exists():
+        raise FileNotFoundError(
+            f"토큰 캐시 파일이 없습니다: {cache_path}. "
+            "먼저 `python scripts/build_token_cache.py`를 실행해 캐시를 생성하세요."
+        )
+    corpus = load_token_cache(cache_path, verses)
+    return BM25Retriever(verses, tokenizer, corpus=corpus)
+
+
 def build_search_service(settings: Settings,
                          embedder: Embedder | None = None) -> SearchService:
     verses = load_verses(settings.data_path)
@@ -46,7 +64,7 @@ def build_search_service(settings: Settings,
         embedder = _make_embedder(settings)
 
     exact = ExactMatcher(verses)
-    bm25 = BM25Retriever(verses, KiwiTokenizer())
+    bm25 = _make_bm25_retriever(settings, verses, KiwiTokenizer())
     dense = _make_dense_retriever(settings, verses, embedder)
     return SearchService(exact, bm25, dense,
                          rrf_k=settings.rrf_k, max_results=settings.max_results,

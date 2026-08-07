@@ -4,10 +4,16 @@ from bible_search.tokenizer import KiwiTokenizer
 
 
 class BM25Retriever:
-    def __init__(self, verses: list[Verse], tokenizer: KiwiTokenizer) -> None:
+    def __init__(self, verses: list[Verse], tokenizer: KiwiTokenizer,
+                corpus: list[list[str]] | None = None) -> None:
         self._verses = verses
         self._tokenizer = tokenizer
-        corpus = [tokenizer.tokenize(v.text) for v in verses]
+        if corpus is None:
+            corpus = [tokenizer.tokenize(v.text) for v in verses]
+        elif len(corpus) != len(verses):
+            raise ValueError(
+                f"corpus 길이({len(corpus)})가 verses 길이({len(verses)})와 다릅니다"
+            )
         # rank_bm25는 빈 문서를 허용하지만, 전부 빈 코퍼스는 방어
         self._bm25 = BM25Okapi(corpus) if corpus else None
 

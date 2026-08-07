@@ -14,3 +14,4 @@ chroma/
 .chroma/
 numpy_index/
 models/
+token_cache.json

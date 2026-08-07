@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     rrf_k: int = 60
     max_results: int = 50
     bm25_top_k: int = 30
+    token_cache_path: str = "token_cache.json"
+    use_token_cache: bool = False
 
 
 @lru_cache
