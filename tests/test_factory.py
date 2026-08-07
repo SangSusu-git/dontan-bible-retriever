@@ -75,7 +75,11 @@ def test_make_dense_retriever_chroma_selects_chroma_retriever(monkeypatch, verse
         def get_collection(self, name):
             return DummyCollection()
 
-    monkeypatch.setattr(factory.chromadb, "PersistentClient", DummyClient)
+    # factory는 chromadb를 함수 안에서 지연 import한다(경량 배포에서는 미설치).
+    # 따라서 factory 모듈 속성이 아니라 chromadb 모듈 자체에 패치해야 한다.
+    import chromadb
+
+    monkeypatch.setattr(chromadb, "PersistentClient", DummyClient)
     s = _settings(vector_store="chroma")
 
     retriever = factory._make_dense_retriever(s, verses, fake_embedder)

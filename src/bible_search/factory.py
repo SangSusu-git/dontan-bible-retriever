@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import chromadb
 from bible_search.config import Settings
 from bible_search.data.loader import load_verses
 from bible_search.tokenizer import KiwiTokenizer
@@ -28,6 +27,10 @@ def _make_embedder(settings: Settings) -> Embedder:
 def _make_dense_retriever(settings: Settings, verses: list[Verse],
                           embedder: Embedder) -> DenseRetriever | NumpyDenseRetriever:
     if settings.vector_store == "chroma":
+        # chromadb는 무거운 의존성이라, numpy 저장소만 쓰는 경량 배포에서는
+        # 설치조차 하지 않는다. 그래서 최상위가 아니라 이 분기에서 import한다.
+        import chromadb
+
         client = chromadb.PersistentClient(settings.chroma_path)
         collection = client.get_collection(settings.chroma_collection)
         return DenseRetriever(collection, verses, embedder,
