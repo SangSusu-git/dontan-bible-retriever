@@ -10,13 +10,24 @@ export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [response, setResponse] = useState<SearchResponse | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit() {
     setHasSearched(true);
+    setError(null);
     startTransition(async () => {
-      const result = await search({ query });
-      setResponse(result);
+      try {
+        const result = await search({ query });
+        setResponse(result);
+      } catch {
+        // 검색 서버(무료 호스팅)가 절전에서 깨어나는 30~60초 동안은
+        // 요청이 실패할 수 있다 — 조용히 멈추지 말고 재시도를 안내한다.
+        setResponse(null);
+        setError(
+          "검색에 실패했습니다. 서버가 깨어나는 중일 수 있으니 잠시 후 다시 시도해주세요."
+        );
+      }
     });
   }
 
@@ -26,7 +37,16 @@ export default function SearchPage() {
 
       <SearchBar value={query} onChange={setQuery} onSubmit={handleSubmit} isLoading={isPending} />
 
-      {hasSearched && response && (
+      {error && (
+        <p
+          role="alert"
+          className="rounded-2xl border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+        >
+          {error}
+        </p>
+      )}
+
+      {hasSearched && !error && response && (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             총 {response.totalCount}건
