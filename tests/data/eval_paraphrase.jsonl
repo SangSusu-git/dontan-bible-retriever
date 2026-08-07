@@ -1,0 +1,24 @@
+{"query": "하늘까지 닿은 사다리로 천사들이 오르내리는 꿈", "expected_ids": ["개역한글:창세기:28:12"], "book": "창세기", "tier": "paraphrase"}
+{"query": "광야에서 내린 만나의 맛은 꿀 과자 같았다", "expected_ids": ["개역한글:출애굽기:16:31"], "book": "출애굽기", "tier": "paraphrase"}
+{"query": "나귀가 입을 열어 주인에게 말하다", "expected_ids": ["개역한글:민수기:22:28"], "book": "민수기", "tier": "paraphrase"}
+{"query": "물을 개처럼 핥아 먹은 사람들만 택하다", "expected_ids": ["개역한글:사사기:7:5", "개역한글:사사기:7:6"], "book": "사사기", "tier": "paraphrase"}
+{"query": "우상 다곤이 궤 앞에 얼굴을 땅에 대고 쓰러지다", "expected_ids": ["개역한글:사무엘상:5:3", "개역한글:사무엘상:5:4"], "book": "사무엘상", "tier": "paraphrase"}
+{"query": "까마귀들이 아침저녁으로 떡과 고기를 가져다 주다", "expected_ids": ["개역한글:열왕기상:17:6"], "book": "열왕기상", "tier": "paraphrase"}
+{"query": "물에 빠진 도끼가 떠오르는 기적", "expected_ids": ["개역한글:열왕기하:6:5", "개역한글:열왕기하:6:6"], "book": "열왕기하", "tier": "paraphrase"}
+{"query": "재 가운데 앉아 기와 조각으로 몸을 긁는 고통", "expected_ids": ["개역한글:욥기:2:8"], "book": "욥기", "tier": "paraphrase"}
+{"query": "목마른 사슴이 시냇물을 찾듯 주를 찾다", "expected_ids": ["개역한글:시편:42:1"], "book": "시편", "tier": "paraphrase"}
+{"query": "네 양식을 물 위에 던지면 여러 날 후에 도로 찾는다", "expected_ids": ["개역한글:전도서:11:1"], "book": "전도서", "tier": "paraphrase"}
+{"query": "해 그림자가 십 도 뒤로 물러간 표적", "expected_ids": ["개역한글:이사야:38:8"], "book": "이사야", "tier": "paraphrase"}
+{"query": "마른 뼈들이 서로 연결되어 큰 군대로 살아나다", "expected_ids": ["개역한글:에스겔:37:7"], "book": "에스겔", "tier": "paraphrase"}
+{"query": "잔치 중 벽에 손가락이 나타나 글자를 쓰다", "expected_ids": ["개역한글:다니엘:5:24"], "book": "다니엘", "tier": "paraphrase"}
+{"query": "요나의 머리 위에 그늘을 만들어 준 박 넝쿨", "expected_ids": ["개역한글:요나:4:6", "개역한글:요나:4:7", "개역한글:요나:4:9", "개역한글:요나:4:10"], "book": "요나", "tier": "paraphrase"}
+{"query": "물고기 입에서 나온 돈으로 성전세를 내다", "expected_ids": ["개역한글:마태복음:17:27"], "book": "마태복음", "tier": "paraphrase"}
+{"query": "귀신 들린 돼지 떼가 비탈로 내리달아 바다에 빠져 죽다", "expected_ids": ["개역한글:마가복음:5:13"], "book": "마가복음", "tier": "paraphrase"}
+{"query": "키 작은 세리가 뽕나무에 올라가 예수를 보려 하다", "expected_ids": ["개역한글:누가복음:19:4"], "book": "누가복음", "tier": "paraphrase"}
+{"query": "설교 시간에 졸다가 삼층 창에서 떨어진 청년", "expected_ids": ["개역한글:사도행전:20:9"], "book": "사도행전", "tier": "paraphrase"}
+{"query": "손을 문 독사를 불에 떨어버리고 해를 입지 않다", "expected_ids": ["개역한글:사도행전:28:5"], "book": "사도행전", "tier": "paraphrase"}
+{"query": "혀는 작은 지체지만 온 몸을 더럽히는 불이다", "expected_ids": ["개역한글:야고보서:3:6"], "book": "야고보서", "tier": "paraphrase"}
+{"query": "차지도 뜨겁지도 않은 미지근한 믿음을 토하리라", "expected_ids": ["개역한글:요한계시록:3:16"], "book": "요한계시록", "tier": "paraphrase"}
+{"query": "해를 입은 여자가 아이를 낳으려 하고 용이 삼키려 하다", "expected_ids": ["개역한글:요한계시록:12:1"], "book": "요한계시록", "tier": "paraphrase"}
+{"query": "영원한 것을 위해 잠깐의 환난은 가볍다", "expected_ids": ["개역한글:고린도후서:4:17"], "book": "고린도후서", "tier": "paraphrase"}
+{"query": "녹지 않는 보물을 하늘에 쌓아 두라", "expected_ids": ["개역한글:마태복음:6:20"], "book": "마태복음", "tier": "paraphrase"}
