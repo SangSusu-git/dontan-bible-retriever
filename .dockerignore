@@ -6,6 +6,6 @@ __pycache__/
 docs/
 tests/
 chroma/
-data/
 *.egg-info/
 .superpowers/
+# data/, numpy_index/, token_cache.json 은 이미지에 포함한다 (Render 무료 티어는 영구 디스크 없음)

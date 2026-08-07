@@ -4,20 +4,18 @@
 #   - 벡터 저장소: numpy 인덱스 (384차원 SVD 축소)
 #   - 형태소 분석: MeCab (Kiwi 대비 메모리 1/20, 약 24MB)
 #
+# 데이터(구절/인덱스/토큰캐시 약 39MB)를 이미지에 포함하는 자체 완결형이다 —
+# Render 무료 티어는 영구 디스크가 없고, 재생성에는 2.1GB 모델이 필요하기 때문.
+#
 # 빌드:
 #   docker build -f Dockerfile.slim -t bible-search-slim .
-#
-# 실행 (데이터/인덱스/캐시는 볼륨 마운트):
+# 실행:
 #   docker run --rm -p 8000:8000 --memory=512m \
-#     -e BIBLE_API_KEY=... -e HF_TOKEN=... \
-#     -v "$PWD/data:/app/data:ro" \
-#     -v "$PWD/numpy_index:/app/numpy_index:ro" \
-#     -v "$PWD/token_cache.json:/app/token_cache.json:ro" \
-#     bible-search-slim
+#     -e BIBLE_API_KEY=... -e HF_TOKEN=... bible-search-slim
 #
 # 주의: token_cache.json은 반드시 BIBLE_TOKENIZER와 같은 토크나이저로 생성해야
 # 한다(다르면 기동 시 명시적 오류). numpy_index도 384차원으로 빌드된 것이어야
-# basis.npy가 함께 존재한다.
+# basis.npy가 함께 존재한다. (둘 다 리포에 커밋되어 있음)
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -33,6 +31,9 @@ RUN pip install --no-cache-dir \
     "huggingface_hub>=0.34"
 
 COPY src ./src
+COPY data/verses.jsonl ./data/verses.jsonl
+COPY numpy_index ./numpy_index
+COPY token_cache.json ./token_cache.json
 
 ENV PYTHONPATH=/app/src \
     BIBLE_DATA_PATH=/app/data/verses.jsonl \
@@ -44,4 +45,5 @@ ENV PYTHONPATH=/app/src \
     BIBLE_USE_TOKEN_CACHE=true
 
 EXPOSE 8000
-CMD ["uvicorn", "bible_search.api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Render는 PORT 환경변수로 바인딩 포트를 지정한다(없으면 8000 사용).
+CMD uvicorn bible_search.api:app --host 0.0.0.0 --port ${PORT:-8000}

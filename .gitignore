@@ -8,10 +8,10 @@ venv/
 .env
 .env.*
 !.env.example
-# 데이터/인덱스/모델 산출물 (Plan 2에서 생성)
-data/*.jsonl
+# 로컬 전용 대용량 산출물
 chroma/
 .chroma/
-numpy_index/
 models/
-token_cache.json
+# 배포 산출물은 커밋한다 — Render 무료 티어는 영구 디스크가 없어
+# 코드와 함께 배포돼야 하고, 재생성에는 2.1GB 임베딩 모델이 필요하다.
+#   data/verses.jsonl (8MB), numpy_index/ (25MB), token_cache.json (5MB)
