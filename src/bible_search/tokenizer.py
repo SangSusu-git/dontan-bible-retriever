@@ -1,6 +1,3 @@
-from kiwipiepy import Kiwi
-
-
 class KiwiTokenizer:
     # 내용어 품사만 유지: 명사류/용언류/부사/외래어·한자·숫자/어근
     CONTENT_TAGS: frozenset[str] = frozenset({
@@ -12,6 +9,10 @@ class KiwiTokenizer:
     })
 
     def __init__(self) -> None:
+        # kiwipiepy는 MeCab만 쓰는 경량 배포에서는 설치하지 않으므로,
+        # 모듈 최상위가 아니라 여기서 import한다(MecabTokenizer도 동일).
+        from kiwipiepy import Kiwi
+
         self._kiwi = Kiwi()
 
     def tokenize(self, text: str) -> list[str]:

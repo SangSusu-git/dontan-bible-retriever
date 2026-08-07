@@ -1,26 +1,35 @@
-# 경량 배포용 이미지 — 로컬 모델(torch/sentence-transformers)과 chromadb를 설치하지 않는다.
-# 질의 임베딩은 HF Inference API가 담당하고, 벡터는 numpy 인덱스를 쓴다.
+# 경량 배포용 이미지 — 로컬 임베딩 모델(torch/sentence-transformers), chromadb,
+# Kiwi를 모두 설치하지 않는다.
+#   - 질의 임베딩: HF Inference API (모델 파일 불필요)
+#   - 벡터 저장소: numpy 인덱스 (384차원 SVD 축소)
+#   - 형태소 분석: MeCab (Kiwi 대비 메모리 1/20, 약 24MB)
 #
 # 빌드:
 #   docker build -f Dockerfile.slim -t bible-search-slim .
-# 실행(데이터/인덱스는 볼륨 마운트):
+#
+# 실행 (데이터/인덱스/캐시는 볼륨 마운트):
 #   docker run --rm -p 8000:8000 --memory=512m \
 #     -e BIBLE_API_KEY=... -e HF_TOKEN=... \
-#     -v "$PWD/data:/app/data" -v "$PWD/numpy_index:/app/numpy_index" \
-#     -v "$PWD/token_cache.json:/app/token_cache.json" \
+#     -v "$PWD/data:/app/data:ro" \
+#     -v "$PWD/numpy_index:/app/numpy_index:ro" \
+#     -v "$PWD/token_cache.json:/app/token_cache.json:ro" \
 #     bible-search-slim
+#
+# 주의: token_cache.json은 반드시 BIBLE_TOKENIZER와 같은 토크나이저로 생성해야
+# 한다(다르면 기동 시 명시적 오류). numpy_index도 384차원으로 빌드된 것이어야
+# basis.npy가 함께 존재한다.
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# 경량 의존성만 설치 (torch, sentence-transformers, chromadb 제외)
 RUN pip install --no-cache-dir \
     "fastapi>=0.110" \
     "uvicorn[standard]>=0.29" \
     "pydantic-settings>=2.2" \
     "numpy>=1.26" \
     "rank-bm25>=0.2.2" \
-    "kiwipiepy>=0.17" \
+    "mecab-ko>=1.0" \
+    "mecab-ko-dic>=1.0" \
     "huggingface_hub>=0.34"
 
 COPY src ./src
@@ -31,6 +40,7 @@ ENV PYTHONPATH=/app/src \
     BIBLE_TOKEN_CACHE_PATH=/app/token_cache.json \
     BIBLE_EMBEDDER=hf \
     BIBLE_VECTOR_STORE=numpy \
+    BIBLE_TOKENIZER=mecab \
     BIBLE_USE_TOKEN_CACHE=true
 
 EXPOSE 8000
