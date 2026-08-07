@@ -7,6 +7,8 @@ def test_settings_defaults(monkeypatch):
     assert s.dense_threshold == 0.7
     assert s.chroma_collection == "verses"
     assert s.bm25_top_k == 30
+    assert s.embedder == "local"
+    assert s.hf_token is None
 
 def test_settings_env_override(monkeypatch):
     monkeypatch.setenv("BIBLE_API_KEY", "k")
