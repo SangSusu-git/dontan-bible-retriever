@@ -107,7 +107,7 @@ def main() -> None:
     Q = kure.encode(queries)  # 이미 L2 정규화됨
     table = {q: Q[i] for i, q in enumerate(queries)}
 
-    vectors1024, ids = load_numpy_index(s.numpy_index_path)
+    vectors1024, ids, _basis = load_numpy_index(s.numpy_index_path)
     vectors1024 = l2n(vectors1024.astype(np.float32))
 
     print(f"SVD 계산 중 ({REDUCED_DIM}차원 투영 기저)...")

@@ -57,7 +57,7 @@ def main() -> None:
     prev = step("토큰 리스트 해제 후", prev)
 
     from bible_search.vectorstore import load_numpy_index
-    vectors, ids = load_numpy_index(s.numpy_index_path)
+    vectors, ids, _basis = load_numpy_index(s.numpy_index_path)
     prev = step(f"numpy 벡터 로드 {vectors.shape} {vectors.dtype}", prev)
 
     print(f"\n  최종 RSS: {rss_mb():.1f} MB")

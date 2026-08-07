@@ -55,13 +55,29 @@ def test_make_dense_retriever_numpy_selects_numpy_retriever(monkeypatch, verses,
     fake_ids = [v.id for v in verses]
     monkeypatch.setattr(
         factory, "load_numpy_index",
-        lambda path: (fake_vectors, fake_ids),
+        lambda path: (fake_vectors, fake_ids, None),
     )
     s = _settings(vector_store="numpy", numpy_index_path="unused-path")
 
     retriever = factory._make_dense_retriever(s, verses, fake_embedder)
 
     assert isinstance(retriever, NumpyDenseRetriever)
+
+
+def test_make_dense_retriever_numpy_passes_basis(monkeypatch, verses, fake_embedder):
+    fake_vectors = np.zeros((len(verses), 4), dtype=np.float32)
+    fake_ids = [v.id for v in verses]
+    fake_basis = np.zeros((4, 8), dtype=np.float32)
+    monkeypatch.setattr(
+        factory, "load_numpy_index",
+        lambda path: (fake_vectors, fake_ids, fake_basis),
+    )
+    s = _settings(vector_store="numpy", numpy_index_path="unused-path")
+
+    retriever = factory._make_dense_retriever(s, verses, fake_embedder)
+
+    assert isinstance(retriever, NumpyDenseRetriever)
+    assert retriever._basis is fake_basis
 
 
 def test_make_dense_retriever_chroma_selects_chroma_retriever(monkeypatch, verses, fake_embedder):

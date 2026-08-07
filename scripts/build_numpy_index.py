@@ -13,11 +13,14 @@ def main() -> None:
     print(f"loaded {len(verses)} verses from {s.data_path}")
 
     embedder = _make_embedder(s)
-    count = build_numpy_index(verses, embedder, s.numpy_index_path)
+    print(f"target dim: {s.numpy_index_dim if s.numpy_index_dim is not None else 'full (no reduction)'}")
+    count = build_numpy_index(verses, embedder, s.numpy_index_path, dim=s.numpy_index_dim)
     print(f"indexed {count} verses into {s.numpy_index_path}")
 
     out_path = Path(s.numpy_index_path)
-    for name in ("vectors.npy", "ids.json"):
+    basis_written = (out_path / "basis.npy").exists()
+    print(f"basis written: {basis_written}")
+    for name in ("vectors.npy", "ids.json", "basis.npy"):
         f = out_path / name
         if f.exists():
             size_mb = f.stat().st_size / (1024 * 1024)

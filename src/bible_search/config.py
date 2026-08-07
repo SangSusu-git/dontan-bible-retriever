@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     hf_token: str | None = None
     vector_store: str = "chroma"
     numpy_index_path: str = "numpy_index"
+    numpy_index_dim: int | None = None
     dense_threshold: float = 0.7
     rrf_k: int = 60
     max_results: int = 50

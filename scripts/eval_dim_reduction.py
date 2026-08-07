@@ -43,7 +43,7 @@ def main() -> None:
     from bible_search.vectorstore import load_numpy_index
 
     s = get_settings()
-    vectors, ids = load_numpy_index(s.numpy_index_path)
+    vectors, ids, _basis = load_numpy_index(s.numpy_index_path)
     vectors = l2n(vectors.astype(np.float32))
     print(f"인덱스: {vectors.shape[0]:,}개 × {vectors.shape[1]}차원")
 

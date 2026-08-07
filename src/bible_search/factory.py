@@ -47,9 +47,9 @@ def _make_dense_retriever(settings: Settings, verses: list[Verse],
         return DenseRetriever(collection, verses, embedder,
                               threshold=settings.dense_threshold)
     if settings.vector_store == "numpy":
-        vectors, ids = load_numpy_index(settings.numpy_index_path)
+        vectors, ids, basis = load_numpy_index(settings.numpy_index_path)
         return NumpyDenseRetriever(vectors, ids, verses, embedder,
-                                   threshold=settings.dense_threshold)
+                                   threshold=settings.dense_threshold, basis=basis)
     raise ValueError(
         f"알 수 없는 vector_store 설정: {settings.vector_store!r} "
         "(유효한 값: 'chroma', 'numpy')"

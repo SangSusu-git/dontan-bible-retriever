@@ -4,7 +4,7 @@ from pathlib import Path
 
 from bible_search.config import get_settings
 from bible_search.data.loader import load_verses
-from bible_search.tokenizer import KiwiTokenizer
+from bible_search.factory import _make_tokenizer
 from bible_search.token_cache import build_token_cache
 
 
@@ -15,7 +15,8 @@ def main() -> None:
     verses = load_verses(s.data_path)
     print(f"loaded {len(verses)} verses from {s.data_path}")
 
-    tokenizer = KiwiTokenizer()
+    tokenizer = _make_tokenizer(s)
+    print(f"using tokenizer: {type(tokenizer).__name__} (BIBLE_TOKENIZER={s.tokenizer})")
     count = build_token_cache(verses, tokenizer, s.token_cache_path)
     elapsed = time.perf_counter() - start
 
