@@ -93,6 +93,38 @@ def test_make_dense_retriever_invalid_value_raises(verses, fake_embedder):
         factory._make_dense_retriever(s, verses, fake_embedder)
 
 
+class DummyKiwiTokenizer:
+    pass
+
+
+class DummyMecabTokenizer:
+    pass
+
+
+def test_make_tokenizer_kiwi_returns_kiwi_tokenizer(monkeypatch):
+    monkeypatch.setattr(factory, "KiwiTokenizer", DummyKiwiTokenizer)
+    s = _settings(tokenizer="kiwi")
+
+    tokenizer = factory._make_tokenizer(s)
+
+    assert isinstance(tokenizer, DummyKiwiTokenizer)
+
+
+def test_make_tokenizer_mecab_returns_mecab_tokenizer(monkeypatch):
+    monkeypatch.setattr(factory, "MecabTokenizer", DummyMecabTokenizer)
+    s = _settings(tokenizer="mecab")
+
+    tokenizer = factory._make_tokenizer(s)
+
+    assert isinstance(tokenizer, DummyMecabTokenizer)
+
+
+def test_make_tokenizer_invalid_value_raises():
+    s = _settings(tokenizer="bogus")
+    with pytest.raises(ValueError, match="bogus"):
+        factory._make_tokenizer(s)
+
+
 def test_make_bm25_retriever_without_cache_tokenizes_directly(verses):
     from bible_search.tokenizer import KiwiTokenizer
     from bible_search.retrievers.bm25 import BM25Retriever
@@ -123,14 +155,40 @@ def test_make_bm25_retriever_with_cache_uses_pretokenized_corpus(tmp_path, verse
     fake_corpus = [["dummy"] for _ in verses]
     captured = {}
 
-    def fake_load_token_cache(path, vs):
+    def fake_load_token_cache(path, vs, tokenizer=None):
         captured["path"] = path
         captured["verses"] = vs
+        captured["tokenizer"] = tokenizer
         return fake_corpus
 
     monkeypatch.setattr(factory, "load_token_cache", fake_load_token_cache)
 
-    retriever = factory._make_bm25_retriever(s, verses, KiwiTokenizer())
+    tok = KiwiTokenizer()
+    retriever = factory._make_bm25_retriever(s, verses, tok)
 
     assert captured["verses"] == verses
     assert retriever._bm25 is not None
+
+
+def test_make_bm25_retriever_with_cache_passes_tokenizer_for_mismatch_check(
+        tmp_path, verses, monkeypatch):
+    from bible_search.tokenizer import KiwiTokenizer
+
+    cache_path = tmp_path / "token_cache.json"
+    cache_path.write_text("{}")
+    s = _settings(use_token_cache=True, token_cache_path=str(cache_path))
+
+    captured = {}
+
+    def fake_load_token_cache(path, vs, tokenizer=None):
+        captured["tokenizer"] = tokenizer
+        return [["dummy"] for _ in vs]
+
+    monkeypatch.setattr(factory, "load_token_cache", fake_load_token_cache)
+
+    tok = KiwiTokenizer()
+    factory._make_bm25_retriever(s, verses, tok)
+
+    # 캐시를 만든 토크나이저와 다르면 조용히 망가지지 않도록, 현재 쓰는
+    # 토크나이저를 load_token_cache에 넘겨 이름 검증을 하게 한다.
+    assert captured["tokenizer"] is tok

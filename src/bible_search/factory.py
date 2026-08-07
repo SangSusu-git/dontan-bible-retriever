@@ -2,7 +2,7 @@ from pathlib import Path
 
 from bible_search.config import Settings
 from bible_search.data.loader import load_verses
-from bible_search.tokenizer import KiwiTokenizer
+from bible_search.tokenizer import KiwiTokenizer, MecabTokenizer
 from bible_search.token_cache import load_token_cache
 from bible_search.embedding import Embedder, HfApiEmbedder, KureEmbedder
 from bible_search.models import Verse
@@ -21,6 +21,17 @@ def _make_embedder(settings: Settings) -> Embedder:
     raise ValueError(
         f"알 수 없는 embedder 설정: {settings.embedder!r} "
         "(유효한 값: 'local', 'hf')"
+    )
+
+
+def _make_tokenizer(settings: Settings) -> KiwiTokenizer | MecabTokenizer:
+    if settings.tokenizer == "kiwi":
+        return KiwiTokenizer()
+    if settings.tokenizer == "mecab":
+        return MecabTokenizer()
+    raise ValueError(
+        f"알 수 없는 tokenizer 설정: {settings.tokenizer!r} "
+        "(유효한 값: 'kiwi', 'mecab')"
     )
 
 
@@ -46,7 +57,7 @@ def _make_dense_retriever(settings: Settings, verses: list[Verse],
 
 
 def _make_bm25_retriever(settings: Settings, verses: list[Verse],
-                         tokenizer: KiwiTokenizer) -> BM25Retriever:
+                         tokenizer: KiwiTokenizer | MecabTokenizer) -> BM25Retriever:
     if not settings.use_token_cache:
         return BM25Retriever(verses, tokenizer)
 
@@ -56,7 +67,9 @@ def _make_bm25_retriever(settings: Settings, verses: list[Verse],
             f"토큰 캐시 파일이 없습니다: {cache_path}. "
             "먼저 `python scripts/build_token_cache.py`를 실행해 캐시를 생성하세요."
         )
-    corpus = load_token_cache(cache_path, verses)
+    # tokenizer를 넘겨, 다른 토크나이저로 만든 캐시를 조용히 잘못 쓰지
+    # 않도록 이름 불일치를 검증한다.
+    corpus = load_token_cache(cache_path, verses, tokenizer=tokenizer)
     return BM25Retriever(verses, tokenizer, corpus=corpus)
 
 
@@ -67,7 +80,7 @@ def build_search_service(settings: Settings,
         embedder = _make_embedder(settings)
 
     exact = ExactMatcher(verses)
-    bm25 = _make_bm25_retriever(settings, verses, KiwiTokenizer())
+    bm25 = _make_bm25_retriever(settings, verses, _make_tokenizer(settings))
     dense = _make_dense_retriever(settings, verses, embedder)
     return SearchService(exact, bm25, dense,
                          rrf_k=settings.rrf_k, max_results=settings.max_results,

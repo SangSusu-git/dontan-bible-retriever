@@ -8,8 +8,13 @@ import hashlib
 import json
 from pathlib import Path
 
+from typing import Protocol
+
 from bible_search.models import Verse
-from bible_search.tokenizer import KiwiTokenizer
+
+
+class _Tokenizer(Protocol):
+    def tokenize(self, text: str) -> list[str]: ...
 
 
 def _fingerprint(verse_ids: list[str]) -> str:
@@ -18,7 +23,7 @@ def _fingerprint(verse_ids: list[str]) -> str:
     return hashlib.sha256(joined.encode("utf-8")).hexdigest()
 
 
-def build_token_cache(verses: list[Verse], tokenizer: KiwiTokenizer,
+def build_token_cache(verses: list[Verse], tokenizer: _Tokenizer,
                       out_path: str | Path) -> int:
     """모든 구절을 토큰화해 out_path에 JSON으로 저장한다. 토큰화한 구절 수를 반환."""
     out_path = Path(out_path)
@@ -31,6 +36,7 @@ def build_token_cache(verses: list[Verse], tokenizer: KiwiTokenizer,
     data = {
         "count": len(verses),
         "fingerprint": _fingerprint([v.id for v in verses]),
+        "tokenizer": type(tokenizer).__name__,
         "verses": entries,
     }
     with open(out_path, "w", encoding="utf-8") as f:
@@ -38,12 +44,18 @@ def build_token_cache(verses: list[Verse], tokenizer: KiwiTokenizer,
     return len(verses)
 
 
-def load_token_cache(out_path: str | Path, verses: list[Verse]) -> list[list[str]]:
+def load_token_cache(out_path: str | Path, verses: list[Verse],
+                     tokenizer: _Tokenizer | None = None) -> list[list[str]]:
     """캐시를 로드해 verses와 같은 순서의 토큰 리스트를 반환한다.
 
     캐시가 verses와 맞지 않으면(구절 수 불일치 또는 id 지문 불일치) 오래된
     캐시를 조용히 잘못 사용하지 않도록 명확한 에러를 낸다. id 집합은 같지만
     순서만 다르면 verses 순서에 맞춰 재정렬해 반환한다.
+
+    tokenizer가 주어지면 캐시를 만든 토크나이저와 이름이 일치하는지도
+    검증한다(다른 토크나이저의 캐시를 잘못 재사용하면 BM25가 조용히
+    깨지므로). tokenizer가 None이거나 캐시에 tokenizer 필드가 없는
+    구버전 캐시라면 이 검증은 건너뛴다.
     """
     out_path = Path(out_path)
     with open(out_path, encoding="utf-8") as f:
@@ -64,6 +76,17 @@ def load_token_cache(out_path: str | Path, verses: list[Verse]) -> list[list[str
             "토큰 캐시가 최신 상태가 아닙니다: 구절 id 지문이 일치하지 않습니다. "
             f"scripts/build_token_cache.py를 다시 실행하세요. (경로: {out_path})"
         )
+
+    cached_tokenizer = data.get("tokenizer")
+    if tokenizer is not None and cached_tokenizer is not None:
+        expected_tokenizer = type(tokenizer).__name__
+        if cached_tokenizer != expected_tokenizer:
+            raise ValueError(
+                f"토큰 캐시가 다른 토크나이저({cached_tokenizer})로 생성되었습니다: "
+                f"현재 설정된 토크나이저는 {expected_tokenizer}입니다. "
+                f"scripts/build_token_cache.py를 다시 실행해 캐시를 재생성하세요. "
+                f"(경로: {out_path})"
+            )
 
     id_to_tokens = {entry["id"]: entry["tokens"] for entry in data["verses"]}
     try:

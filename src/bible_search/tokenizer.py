@@ -17,3 +17,24 @@ class KiwiTokenizer:
     def tokenize(self, text: str) -> list[str]:
         tokens = self._kiwi.tokenize(text)
         return [t.form.lower() for t in tokens if t.tag in self.CONTENT_TAGS]
+
+
+class MecabTokenizer:
+    """MeCab 기반 내용어 토크나이저 — KiwiTokenizer와 동일 인터페이스/태그 정책(세종 태그셋)."""
+
+    CONTENT_TAGS: frozenset[str] = KiwiTokenizer.CONTENT_TAGS
+
+    def __init__(self) -> None:
+        import mecab_ko
+
+        self._tagger = mecab_ko.Tagger()
+
+    def tokenize(self, text: str) -> list[str]:
+        out = []
+        for line in self._tagger.parse(text).splitlines():
+            if line == "EOS" or "\t" not in line:
+                continue
+            surface, feat = line.split("\t", 1)
+            if feat.split(",", 1)[0] in self.CONTENT_TAGS:
+                out.append(surface.lower())
+        return out

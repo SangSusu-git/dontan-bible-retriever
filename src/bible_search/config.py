@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     bm25_top_k: int = 30
     token_cache_path: str = "token_cache.json"
     use_token_cache: bool = False
+    tokenizer: str = "kiwi"
 
 
 @lru_cache
