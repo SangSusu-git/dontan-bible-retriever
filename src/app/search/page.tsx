@@ -12,6 +12,7 @@ export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [response, setResponse] = useState<SearchResponse | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [showSlowNotice, setShowSlowNotice] = useState(false);
   const slowNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -24,6 +25,7 @@ export default function SearchPage() {
 
   function handleSubmit() {
     setHasSearched(true);
+    setError(null);
     setShowSlowNotice(false);
     slowNoticeTimer.current = setTimeout(() => {
       setShowSlowNotice(true);
@@ -33,6 +35,13 @@ export default function SearchPage() {
       try {
         const result = await search({ query });
         setResponse(result);
+      } catch {
+        // 검색 서버(무료 호스팅)가 절전에서 깨어나는 30~60초 동안은
+        // 요청이 실패할 수 있다 — 조용히 멈추지 말고 재시도를 안내한다.
+        setResponse(null);
+        setError(
+          "검색에 실패했습니다. 서버가 깨어나는 중일 수 있으니 잠시 후 다시 시도해주세요."
+        );
       } finally {
         if (slowNoticeTimer.current) clearTimeout(slowNoticeTimer.current);
         setShowSlowNotice(false);
@@ -52,6 +61,15 @@ export default function SearchPage() {
         </div>
       )}
 
+      {error && (
+        <p
+          role="alert"
+          className="rounded-2xl border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+        >
+          {error}
+        </p>
+      )}
+
       {isPending ? (
         <div className="flex flex-col items-center gap-3 py-10 text-sm text-zinc-500 dark:text-zinc-400">
           <span className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-500 dark:border-zinc-700 dark:border-t-zinc-300" />
@@ -59,6 +77,7 @@ export default function SearchPage() {
         </div>
       ) : (
         hasSearched &&
+        !error &&
         response && (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
