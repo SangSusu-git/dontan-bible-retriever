@@ -151,6 +151,15 @@ def test_make_bm25_retriever_without_cache_tokenizes_directly(verses):
     assert isinstance(retriever, BM25Retriever)
 
 
+def test_make_bm25_retriever_passes_bm25_b_from_settings(verses):
+    from bible_search.tokenizer import KiwiTokenizer
+
+    s = _settings(use_token_cache=False, bm25_b=0.4)
+    retriever = factory._make_bm25_retriever(s, verses, KiwiTokenizer())
+
+    assert retriever._bm25.b == 0.4
+
+
 def test_make_bm25_retriever_with_missing_cache_raises(tmp_path, verses):
     from bible_search.tokenizer import KiwiTokenizer
 

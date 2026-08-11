@@ -59,7 +59,7 @@ def _make_dense_retriever(settings: Settings, verses: list[Verse],
 def _make_bm25_retriever(settings: Settings, verses: list[Verse],
                          tokenizer: KiwiTokenizer | MecabTokenizer) -> BM25Retriever:
     if not settings.use_token_cache:
-        return BM25Retriever(verses, tokenizer)
+        return BM25Retriever(verses, tokenizer, b=settings.bm25_b)
 
     cache_path = Path(settings.token_cache_path)
     if not cache_path.exists():
@@ -70,7 +70,7 @@ def _make_bm25_retriever(settings: Settings, verses: list[Verse],
     # tokenizer를 넘겨, 다른 토크나이저로 만든 캐시를 조용히 잘못 쓰지
     # 않도록 이름 불일치를 검증한다.
     corpus = load_token_cache(cache_path, verses, tokenizer=tokenizer)
-    return BM25Retriever(verses, tokenizer, corpus=corpus)
+    return BM25Retriever(verses, tokenizer, corpus=corpus, b=settings.bm25_b)
 
 
 def build_search_service(settings: Settings,
@@ -84,4 +84,6 @@ def build_search_service(settings: Settings,
     dense = _make_dense_retriever(settings, verses, embedder)
     return SearchService(exact, bm25, dense,
                          rrf_k=settings.rrf_k, max_results=settings.max_results,
-                         bm25_top_k=settings.bm25_top_k)
+                         bm25_top_k=settings.bm25_top_k, fusion=settings.fusion,
+                         w_bm25=settings.w_bm25, w_dense=settings.w_dense,
+                         w_cov=settings.w_cov, w_prox=settings.w_prox)

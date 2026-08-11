@@ -5,7 +5,7 @@ from bible_search.tokenizer import KiwiTokenizer
 
 class BM25Retriever:
     def __init__(self, verses: list[Verse], tokenizer: KiwiTokenizer,
-                corpus: list[list[str]] | None = None) -> None:
+                corpus: list[list[str]] | None = None, b: float = 0.75) -> None:
         self._verses = verses
         self._tokenizer = tokenizer
         if corpus is None:
@@ -15,7 +15,7 @@ class BM25Retriever:
                 f"corpus 길이({len(corpus)})가 verses 길이({len(verses)})와 다릅니다"
             )
         # rank_bm25는 빈 문서를 허용하지만, 전부 빈 코퍼스는 방어
-        self._bm25 = BM25Okapi(corpus) if corpus else None
+        self._bm25 = BM25Okapi(corpus, b=b) if corpus else None
 
     def search(self, query: str, limit: int | None = None) -> list[SearchResult]:
         if self._bm25 is None:
